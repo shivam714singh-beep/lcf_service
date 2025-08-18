@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: dev
+
+logging:
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.apache.kafka: WARN
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
+    com.example.publisher.myapp: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  security:
+    enabled: false
