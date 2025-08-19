@@ -3,9 +3,11 @@ package com.example.publisher.myapp.controller;
 import com.example.publisher.myapp.auth.*;
 import com.example.publisher.myapp.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Slf4j  // ADDED
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -32,6 +35,15 @@ public class AuthController {
             );
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.username());
+
+            // ADDED: Fetch user entity to get ID for logging
+            UserEntity user = userRepository.findByUsername(loginRequest.username())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // ADDED: Log user ID on successful login
+            log.info("User logged in successfully with ID: {}", user.getId());
+
+
             String token = jwtUtils.generateToken(userDetails.getUsername());
             String role = userDetails.getAuthorities().stream()
                     .findFirst()
@@ -40,6 +52,8 @@ public class AuthController {
 
             return ResponseEntity.ok(new LoginResponse(token, role));
         } catch (BadCredentialsException e) {
+            // ADDED: Log failed login attempts
+            log.warn("Failed login attempt for username: {}", loginRequest.username());
             return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
         }
     }
@@ -47,6 +61,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
+            // ADDED THESE 2 LINES:
+            log.warn("Registration attempt failed - User already exists with username: {}", request.username());
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
@@ -57,7 +73,13 @@ public class AuthController {
                 .role("USER")
                 .build();
 
-        userRepository.save(user);
+        // MODIFIED: Capture saved user to get ID
+        UserEntity savedUser = userRepository.save(user);
+
+        // ADDED: Log successful registration with ID
+        log.info("User registered successfully with ID: {} and username: {}",
+                savedUser.getId(), savedUser.getUsername());
+
         return ResponseEntity.ok("User registered successfully");
     }
 
