@@ -42,10 +42,7 @@ public class AuthController {
 
             // ADDED: Log user ID on successful login
             log.info("User logged in successfully with ID: {}", user.getId());
-
-            log.info("User logged in successfully with ID: {} and username{}",user.getId(),user.getUsername());
             
-
 
             String token = jwtUtils.generateToken(userDetails.getUsername());
             String role = userDetails.getAuthorities().stream()
