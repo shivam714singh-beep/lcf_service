@@ -42,7 +42,7 @@ public class AuthController {
 
             // ADDED: Log user ID on successful login
             log.info("User logged in successfully with ID: {}", user.getId());
-            
+
 
             String token = jwtUtils.generateToken(userDetails.getUsername());
             String role = userDetails.getAuthorities().stream()
@@ -63,6 +63,8 @@ public class AuthController {
         if (userRepository.findByUsername(request.username()).isPresent()) {
             // ADDED THESE 2 LINES:
             log.warn("Registration attempt failed - User already exists with username: {}", request.username());
+
+
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
@@ -76,9 +78,9 @@ public class AuthController {
         // MODIFIED: Capture saved user to get ID
         UserEntity savedUser = userRepository.save(user);
 
-        // ADDED: Log successful registration with ID
-        log.info("User registered successfully with ID: {} and username: {}",
-                savedUser.getId(), savedUser.getUsername());
+        // ADDED: Log successful registration
+
+        log.info("Registration successful for usera {} and user name is {} ", savedUser.getId(), savedUser.getUsername());
 
         return ResponseEntity.ok("User registered successfully");
     }
